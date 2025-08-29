@@ -2,21 +2,25 @@ let currentCode = "";
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
-
+    // Roblox will fetch the Lua code
     res.setHeader("Content-Type", "text/plain");
-    res.status(200).send(currentCode);
+    res.status(200).send(currentCode || "-- No code available");
   } 
   else if (req.method === "POST") {
     try {
       let body = "";
       req.on("data", chunk => { body += chunk; });
       req.on("end", () => {
-        const parsed = JSON.parse(body);
-        if (typeof parsed.code === "string") {
-          currentCode = parsed.code; 
-          res.status(200).send("Updated successfully");
-        } else {
-          res.status(400).send("Invalid JSON (expected { code: \"lua code\" })");
+        try {
+          const parsed = JSON.parse(body);
+          if (typeof parsed.code === "string") {
+            currentCode = parsed.code; 
+            res.status(200).send("Updated successfully");
+          } else {
+            res.status(400).send("Invalid JSON (expected { code: \"lua code\" })");
+          }
+        } catch {
+          res.status(400).send("Invalid JSON");
         }
       });
       req.on("error", err => {
